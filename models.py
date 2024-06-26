@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import ForeignKey, String, TIMESTAMP, Uuid, Enum, Table, Column
+from sqlalchemy import ForeignKey, String, TIMESTAMP, Uuid, Enum, Table, Column, UniqueConstraint
 from sqlalchemy.ext.asyncio import AsyncAttrs
 import datetime
 import uuid
@@ -75,10 +75,10 @@ class Message(Base):
         Uuid(as_uuid=True), ForeignKey('profiles.profile_id', ondelete='SET NULL'), nullable=True, index=True)
 
 
-project_tag_association = Table('project_tag', Base.metadata,
-                                Column('project_id', Uuid(as_uuid=True), ForeignKey(
-                                    'projects.project_id'), primary_key=True),
-                                Column('tag_id', Uuid(as_uuid=True), ForeignKey('tags.tag_id'), primary_key=True))
+project_tag = Table('project_tag', Base.metadata,
+                    Column('project_id', Uuid(as_uuid=True), ForeignKey(
+                        'projects.project_id')),
+                    Column('tag_id', Uuid(as_uuid=True), ForeignKey('tags.tag_id')))
 
 
 class Project(Base):
@@ -86,14 +86,14 @@ class Project(Base):
 
     project_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), default=uuid.uuid4,
                                                   primary_key=True, index=True)
-    title: Mapped[str] = mapped_column(String(250))
+    title: Mapped[str] = mapped_column(index=True)
     description: Mapped[str] = mapped_column(nullable=True)
     featured_image: Mapped[str] = mapped_column(nullable=True,
                                                 default='/static/images/default.jpg')
     demo_link: Mapped[str] = mapped_column(nullable=True)
     source_code: Mapped[str] = mapped_column(nullable=True)
     vote_total: Mapped[int] = mapped_column(default=0)
-    vote_ratio: Mapped[int] = mapped_column(default=0)
+    vote_ratio: Mapped[float] = mapped_column(default=0)
     created: Mapped[datetime.datetime] = mapped_column(
         TIMESTAMP(timezone=True), default=datetime.datetime.now(datetime.timezone.utc)
     )
@@ -103,8 +103,11 @@ class Project(Base):
 
     owner: Mapped['Profile'] = relationship(back_populates='projects')
     tags: Mapped[list['Tag']] = relationship(
-        back_populates='projects', secondary=project_tag_association)
+        back_populates='projects', secondary=project_tag)
     reviews: Mapped[list['Review']] = relationship(back_populates='project')
+
+    def update_vote_ratio(self, value):
+        self.vote_ratio = value / self.vote_total * 100
 
 
 class Review(Base):
@@ -125,10 +128,13 @@ class Review(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True),
                                                 ForeignKey('profiles.profile_id', ondelete='SET NULL'), nullable=True)
     project_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True),
-                                                  ForeignKey('projects.project_id', ondelete="CASCADE"))
+                                                  ForeignKey('projects.project_id', ondelete="CASCADE"), index=True)
 
     owner: Mapped[Profile] = relationship(back_populates='reviews')
     project: Mapped[Project] = relationship(back_populates='reviews')
+
+    __table_args__ = (UniqueConstraint(
+        'project_id', 'owner_id', name='_project_user_uc'),)
 
 
 class Tag(Base):
@@ -139,4 +145,4 @@ class Tag(Base):
     name: Mapped[str] = mapped_column(String(200), index=True)
 
     projects: Mapped[list['Tag']] = relationship('Project',
-                                                 back_populates='tags', secondary=project_tag_association)
+                                                 back_populates='tags', secondary=project_tag)

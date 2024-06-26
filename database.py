@@ -1,5 +1,5 @@
-from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy import text
 from fastapi import Depends, HTTPException
 from typing import Annotated
 from models import Base
@@ -14,6 +14,27 @@ SessionLocal = async_sessionmaker(
 async def get_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(text("""
+        CREATE TRIGGER IF NOT EXISTS update_vote_total_after_insert
+        AFTER INSERT ON reviews
+        FOR EACH ROW
+        BEGIN
+            UPDATE projects
+            SET vote_total = vote_total + 1
+            WHERE project_id = NEW.project_id;
+        END;
+        """))
+
+        await conn.execute(text("""
+            CREATE TRIGGER IF NOT EXISTS update_vote_total_after_delete
+            AFTER DELETE ON reviews
+            FOR EACH ROW
+            BEGIN
+                UPDATE projects
+                SET vote_total = vote_total - 1
+                WHERE project_id = OLD.project_id;
+            END;
+        """))
     db = SessionLocal()
     try:
         yield db
