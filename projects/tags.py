@@ -21,14 +21,15 @@ async def get_project_tags(project_id: str, db: db_dependency):
 @router.post('/')
 async def post_tag(tag_name: str, project_id: str, user: user_dependency, db: db_dependency):
     # Retrieve the project
-    project = await _get_project(project_id, db)
+    stmt = select(Project).where(Project.project_id == UUID(project_id))
+    project = (await db.scalars(stmt)).first()
+
     if project.owner_id != UUID(user['user_id']):
         raise HTTPException(
             status_code=401, detail="You're not authorized to add tags to this project!")
 
     # Check if the tag already exists
     tag_exist = (await db.scalars(select(Tag).where(Tag.name == tag_name))).first()
-    print(tag_exist.__dict__)
 
     if not tag_exist:
         tag = Tag(name=tag_name)
@@ -50,7 +51,7 @@ async def post_tag(tag_name: str, project_id: str, user: user_dependency, db: db
 
 
 @router.delete('/')
-async def delete_tag(tag_id: str, project_id: str, user: user_dependency, db: db_dependency):
+async def delete_tag_api(tag_id: str, project_id: str, user: user_dependency, db: db_dependency):
     # verify the owner, and project
     stmt = select(Project.owner_id).join(Project.tags).where(
         Project.project_id == UUID(project_id),

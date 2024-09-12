@@ -1,6 +1,6 @@
 from uuid import UUID
 from fastapi import APIRouter, status, HTTPException
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, desc
 from database import db_dependency, commit_db
 from models import Message
 from .auth import user_dependency
@@ -58,7 +58,8 @@ async def send_message_from_non_user(message: MessageFromNonUser, db: db_depende
 
 @router.get('/received-messages')
 async def get_received_messages(user: user_dependency, db: db_dependency):
-    stmt = select(Message).where(Message.recipient == UUID(user['user_id']))
+    stmt = select(Message).where(Message.recipient == UUID(
+        user['user_id'])).order_by(Message.is_read, Message.created)
     messages = (await db.scalars(stmt)).all()
     if not messages:
         return []

@@ -17,15 +17,14 @@ async def save_and_compress_image(image: UploadFile) -> str:
         raise HTTPException(status_code=400, detail="Invalid image extension")
 
     # Check the size of the uploaded file
-    contents = await image.read()
-    if len(contents) > MAX_FILE_SIZE:
+    if image.size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400, detail="File size exceeds the maximum limit of 10 MB")
 
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
     # Create a directory named after the current date
-    date_dir = os.path.join(SAVE_DIR, current_date)
+    date_dir = f'{SAVE_DIR}/{current_date}'
     os.makedirs(date_dir, exist_ok=True)
 
     # Generate a unique filename using UUID
@@ -33,10 +32,11 @@ async def save_and_compress_image(image: UploadFile) -> str:
     unique_filename = f"{str(uuid.uuid4())[:10]}.{extension}"
 
     # Create the full path for the file
-    file_path = os.path.join(date_dir, unique_filename)
+    file_path = f'{date_dir}/{unique_filename}'
 
     # Convert the contents to a BytesIO object
-    image_file = BytesIO(contents)
+    content = await image.read()
+    image_file = BytesIO(content)
     try:
         img = Image.open(image_file)
     except IOError:

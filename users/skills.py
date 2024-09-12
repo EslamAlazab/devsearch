@@ -45,7 +45,7 @@ async def add_skill(skill: SkillSchema, user: user_dependency, db: db_dependency
 
 
 @router.put('/me/skill/{skill_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def update_skill(skill_id: str, updated_skill: SkillSchema, user: user_dependency, db: db_dependency):
+async def update_skill_api(skill_id: str, updated_skill: SkillSchema, user: user_dependency, db: db_dependency):
     """
     If the description field is not provided, the existing value remain unchanged.
     If it is provided with a null value, it will be set to null.

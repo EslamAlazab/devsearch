@@ -1,0 +1,56 @@
+{% extends 'main.html' %} {% block content %}
+<div class="auth">
+  <div class="card">
+    <div class="auth__header text-center">
+      <a href="/">
+        <img
+          src="{{ url_for('static', path= 'images/icon.svg') }}"
+          alt="icon"
+        />
+      </a>
+      <h3>Account Login</h3>
+      <p>Hello Developer, Welcome Back!</p>
+    </div>
+
+    <form action="" method="POST" class="form auth__form">
+      <input
+        type="hidden"
+        name="csrftoken"
+        value="{{ request.scope.csrftoken() }}"
+      />
+      <div class="form__field">
+        <label for="formInput#text">Username or Email: </label>
+        <input
+          class="input input--text"
+          id="formInput#text"
+          type="text"
+          name="username_or_email"
+          placeholder="Enter your username..."
+        />
+      </div>
+
+      <!-- Input:Password -->
+      <div class="form__field">
+        <label for="formInput#password">Password: </label>
+        <input
+          class="input input--password"
+          id="formInput#passowrd"
+          type="password"
+          name="password"
+          placeholder="••••••••"
+        />
+      </div>
+
+      <div class="auth__actions">
+        <input class="btn btn--sub btn--lg" type="submit" value="Log In" />
+        <a href="">Forget Password?</a>
+      </div>
+    </form>
+
+    <div class="auth__alternative">
+      <p>Don’t have an Account?</p>
+      <a href="{{ url_for('register') }}">Sign Up</a>
+    </div>
+  </div>
+</div>
+{% endblock content %}

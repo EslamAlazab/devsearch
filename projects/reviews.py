@@ -1,9 +1,11 @@
 from uuid import UUID
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+from fastapi import APIRouter, HTTPException, Query
 from sqlalchemy import select, func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import db_dependency, commit_db
-from models import Review
+from models import Review, Profile
 from users.auth import user_dependency
 from .schemas import ReviewSchema
 from .utils import update_votes
@@ -13,19 +15,22 @@ router = APIRouter(prefix='/projects/reviews', tags=['reviews'])
 
 
 @router.get('/')
-async def get_Project_reviews(project_id: str, db: db_dependency):
+async def get_Project_reviews(project_id: str, db: db_dependency, page: Annotated[int, Query(ge=1)] = 1,
+                              size: Annotated[int, Query(ge=1)] = 10):
     """
     Get all reviews for a specific project.
 
     Returns:
         list: A list of reviews for the project.
     """
-    stmt = select(Review).where(Review.project_id == UUID(project_id))
+    start = (page - 1) * size
+    stmt = select(Review).where(Review.project_id == UUID(project_id)).offset(
+        start).limit(size).options(joinedload(Review.owner).load_only(Profile.username, Profile.profile_image))
     reviews = (await db.scalars(stmt)).all() or []
     return reviews
 
 
-@router.get('/')
+@router.get('/my-review/')
 async def get_my_review(review_id: str, user: user_dependency,
                         db: db_dependency):
     """

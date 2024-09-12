@@ -1,0 +1,47 @@
+{% extends 'main.html' %} {% block content %}
+
+<!-- Main Section -->
+<main class="formPage my-xl">
+  <div class="content-box">
+    <div class="formWrapper">
+      <a class="backButton" href="{{ url_for('account')}}"
+        ><i class="im im-angle-left"><</i></a
+      >
+      <br />
+
+      <form
+        action="{{ url_for('edit-profile-image') }}"
+        method="POST"
+        class="form auth__form"
+        enctype="multipart/form-data"
+      >
+        <input
+          type="hidden"
+          name="csrftoken"
+          value="{{ request.scope.csrftoken() }}"
+        />
+        <div class="form__field">
+          <label for="formInput#text">New Image</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="file"
+            name="profile_image"
+          />
+          {% if errors %}
+          <ul>
+            <li style="color: red">{{ errors }}</li>
+          </ul>
+          {% endif %}
+        </div>
+        <input
+          class="btn btn--sub btn--lg my-md"
+          type="submit"
+          value="Submit"
+        />
+      </form>
+    </div>
+  </div>
+</main>
+
+{% endblock content %}

@@ -1,8 +1,9 @@
 import os
-from fastapi import APIRouter, status, HTTPException, Depends, UploadFile
-from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
+from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, Query
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from database import db_dependency, commit_db
 from models import Profile, Skill
 from .schemas import CreateProfile, Token, UpdateProfile, SendProfile
@@ -16,50 +17,51 @@ from .utils import save_and_compress_image
 router = APIRouter(prefix='/users-api', tags=['users-api'])
 
 
-async def get_all_skills(profile_id: str, db):
-    stmt = select(Skill.skill_id, Skill.name, Skill.description).where(
-        Skill.owner_id == UUID(profile_id))
-    result = (await db.execute(stmt)).all()
-    skills = []
-    for row in result:
-        skills.append(
-            {'skill_id': row[0], "name": row[1], 'description': row[2]})
+# async def get_all_skills(profile_id: str, db):
+# stmt = select(Skill.skill_id, Skill.name, Skill.description).where(
+#     Skill.owner_id == UUID(profile_id))
+# result = (await db.execute(stmt)).all()
+# skills = []
+# for row in result:
+#     skills.append(
+#         {'skill_id': row[0], "name": row[1], 'description': row[2]})
 
-    return skills
+# return skills
 
 
 @router.get('/')
-async def get_user(profile_id: str, db: db_dependency):
-    stmt = select(Profile).where(Profile.profile_id == UUID(profile_id))
-    user: Profile = (await db.scalars(stmt)).first()
+async def get_user(profile_id: str, db: db_dependency, with_skills: bool = True):
+    stmt = select(Profile).where(
+        Profile.profile_id == UUID(profile_id))
+    if with_skills:
+        stmt = select(Profile).options(joinedload(Profile.skills)).where(
+            Profile.profile_id == UUID(profile_id))
+    user = (await db.scalars(stmt)).first()
     if not user:
         raise HTTPException(
             status_code=404, detail='Could not found your profile')
-    skills = await get_all_skills(profile_id, db)
-
-    user_dict = user.__dict__
-    user_dict.update({"skills": skills})
-    profile = SendProfile(**user_dict)
-
-    return profile
+    return user
 
 
 @router.get('/search/')
 async def search_users(db: db_dependency, username: str | None = None,
-                       skill: str | None = None):
+                       skill: str | None = None, page: Annotated[int, Query(ge=1)] = 1,
+                       size: Annotated[int, Query(ge=1)] = 10):
     """
-    Retrieve user profiles with optional filters for username and skill.
+    Retrieve users profile with optional filters for username and skill.
 
     Returns:
         List[Profile]: A list of user profiles matching the filters.
     """
-    stmt = select(Profile)
+    start = (page - 1) * size
+    stmt = select(Profile).options(joinedload(Profile.skills)).offset(
+        start).limit(size)
     if username:
         stmt = stmt.where(Profile.username.ilike(f'%{username}%'))
     if skill:
         stmt = stmt.join(Profile.skills).where(Skill.name == skill)
 
-    profiles = (await db.scalars(stmt)).all()
+    profiles = (await db.scalars(stmt)).unique().all()
     return profiles
 
 
@@ -79,7 +81,7 @@ async def create_user(user: CreateProfile, db: db_dependency):
     return new_user
 
 
-@router.post('/token', status_code=status.HTTP_200_OK, response_model=Token)
+@router.post('/token', status_code=status.HTTP_200_OK, response_model=Token, name='token')
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db: db_dependency):
     user: Profile = await authenticate_user(form_data.username, form_data.password, db)
     if not user:
@@ -149,15 +151,15 @@ async def update_profile_image(image: UploadFile, user: user_dependency, db: db_
     # Note: Error handling occurs within the called functions.
 
     # Get the user profile
-    profile: Profile = await get_user(user['user_id'], db)
+    profile: Profile = await get_user(user['user_id'], db, with_skills=False)
     old_image_path = profile.profile_image
 
     # Validate, compress, and save the image, then update the profile with the new image path
     profile.profile_image = await save_and_compress_image(image)
-    await db.commit()
+    await commit_db(db)
 
     # Remove the old image if it's not the default image
-    if old_image_path and old_image_path != '/static/images/default.jpg':
+    if old_image_path and old_image_path not in ('/images/default.jpg', '/images/user-default.png'):
         try:
             os.remove(old_image_path)
         except OSError as e:

@@ -19,14 +19,16 @@ async def username_validator(username: str, db: AsyncSession) -> list[str]:
 
 async def email_validator(email: str, db: AsyncSession) -> list[str]:
     errors = []
+    try:
+        Email(email=email)
+    except ValidationError as ex:
+        errors.append(ex.errors()[0]['msg'])
+        return errors
+
     stmt = select(Profile.email).where(Profile.email == email)
     if (await db.scalars(stmt)).first():
         errors.append('Email used before!')
 
-    try:
-        email = Email(email=email)
-    except ValidationError as ex:
-        errors.append(ex.errors()[0]['msg'])
     return errors
 
 
@@ -52,7 +54,11 @@ def password_validator(password: str) -> list[str]:
     return errors
 
 
-async def user_validation(username: str, email: str, password: str, db: AsyncSession) -> dict[str, list]:
+def password_2_validator(x, y): return [
+    'Please make sure to use the same password'] if x != y else []
+
+
+async def user_validation(username: str, email: str, password: str, db: AsyncSession, password_2: str | None = None) -> dict[str, list]:
     errors = {}
     username_err = await username_validator(username, db)
     if username_err:
@@ -63,5 +69,9 @@ async def user_validation(username: str, email: str, password: str, db: AsyncSes
     password_err = password_validator(password)
     if password_err:
         errors['password'] = password_err
+    if password_2:
+        password_2_err = password_2_validator(password, password_2)
+        if password_2_err:
+            errors['password_2'] = password_2_err
 
     return errors

@@ -11,7 +11,7 @@ SessionLocal = async_sessionmaker(
     bind=engine, autoflush=False, expire_on_commit=False)
 
 
-async def get_db():
+async def create_db_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.execute(text("""
@@ -35,11 +35,25 @@ async def get_db():
                 WHERE project_id = OLD.project_id;
             END;
         """))
+
+setup_done = True
+
+
+async def initialize_once():
+    global setup_done
+    if not setup_done:
+        await create_db_tables()
+
+
+async def get_db():
+    # await initialize_once()
+
     db = SessionLocal()
     try:
         yield db
     finally:
         await db.close()
+
 
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
 

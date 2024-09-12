@@ -1,0 +1,94 @@
+{% extends 'main.html' %} {% block content %}
+<!-- Main Section -->
+<main class="formPage my-xl">
+  <div class="content-box">
+    <div class="formWrapper">
+      <a
+        class="backButton"
+        href="{{ url_for('user-profile', profile_id = recipient_id) }}"
+        ><i class="im im-angle-left"><</i></a
+      >
+      <br />
+
+      <form class="form" method="POST">
+        <input
+          type="hidden"
+          name="csrftoken"
+          value="{{ request.scope.csrftoken() }}"
+        />
+        {% if request.user.is_authenticated == False %}
+        <div class="form__field">
+          <label for="formInput#text">Your Name</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="name"
+          />
+          {% if errors and errors[name] %}
+          <ul>
+            <li style="color: red">{{ errors[name] }}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Email</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="email"
+            name="email"
+            required="true"
+          />
+          {% if errors and errors[email] %}
+          <ul>
+            <li style="color: red">{{ errors[email] }}</li>
+          </ul>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="form__field">
+          <label for="formInput#text">Subject</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="subject"
+            required="true"
+          />
+          {% if errors and errors[subject] %}
+          <ul>
+            <li style="color: red">{{ errors[subject] }}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Body</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="body"
+            required="true"
+          />
+          {% if errors and errors[body] %}
+          <ul>
+            <li style="color: red">{{ errors[body] }}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <input
+          class="btn btn--sub btn--lg my-md"
+          type="submit"
+          value="Submit"
+        />
+      </form>
+    </div>
+  </div>
+</main>
+
+{% endblock content %}

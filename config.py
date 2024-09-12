@@ -1,6 +1,10 @@
 from datetime import timedelta
 import os
 import logging
+from fastapi.templating import Jinja2Templates
+from jinja2.ext import loopcontrols
+
+templates = Jinja2Templates('render/templates', extensions=[loopcontrols])
 
 SECRET_KEY = os.getenv('secret_key', 'testkey')
 ALGORITHM = "HS256"

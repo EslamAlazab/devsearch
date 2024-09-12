@@ -1,10 +1,10 @@
 from uuid import UUID
 import os
-from fastapi import APIRouter, UploadFile, HTTPException
-from sqlalchemy import select, or_, distinct
-from sqlalchemy.orm import joinedload
+from typing import Annotated
+from fastapi import APIRouter, UploadFile, HTTPException, Query
+from sqlalchemy import select, or_
 from database import db_dependency, commit_db
-from models import Project, Tag, Profile
+from models import Project, Tag, Profile, Review
 from config import logger
 from users.auth import user_dependency
 from users.utils import save_and_compress_image
@@ -12,46 +12,58 @@ from .schemas import CreateProject, UpdateProject
 from .reviews import get_Project_reviews
 from .tags import get_project_tags
 from .utils import _get_project
+from sqlalchemy.orm import joinedload
 
 
 router = APIRouter(prefix='/projects-api', tags=['projects'])
 
 
 @router.get('/search/')
-async def search_projects(db: db_dependency, username_project_name_or_tag: str | None = None):
-    stmt = select(Project)
+async def search_projects(db: db_dependency, project_title_or_tag: str | None = None,
+                          page: Annotated[int, Query(ge=1)] = 1, size: Annotated[int, Query(ge=1)] = 9):
+    start = (page - 1) * size
+    stmt = select(Project).distinct().offset(
+        start).limit(size).order_by(Project.created).options(
+        joinedload(Project.tags),
+        joinedload(Project.owner).load_only(Profile.username))
 
-    if username_project_name_or_tag:
-        var = f"%{username_project_name_or_tag}%"
-        stmt = stmt.join(Project.owner).join(Project.tags).where(
+    if project_title_or_tag:
+        var = f"%{project_title_or_tag}%"
+        stmt = stmt.join(Project.tags).where(
             or_(
                 Project.title.ilike(var),
-                Profile.username.ilike(var),
-                Tag.name == (username_project_name_or_tag)
+                Tag.name.ilike(var)
             )
         )
 
-    projects = (await db.scalars(stmt)).all()
-    projects = set(projects)
-    # projects = result.scalars().all()
+    projects = (await db.scalars(stmt)).unique().all()
+    return projects
+
+
+@router.get('/user-projects/{user_id}')
+async def get_user_projects(user_id: str, db: db_dependency,
+                            page: Annotated[int, Query(ge=1)] = 1,
+                            size: Annotated[int, Query(ge=1)] = 10):
+    start = (page - 1) * size
+    stmt = select(Project).where(Project.owner_id == UUID(user_id)).offset(
+        start).limit(size).order_by(Project.created).options(joinedload(
+            Project.tags))
+
+    projects = (await db.scalars(stmt)).unique().all()
     return projects
 
 
 @router.get('/{project_id}')
 async def get_project(project_id: str, db: db_dependency):
-    project = (await _get_project(project_id, db)).__dict__
-    tags = (await get_project_tags(project_id, db))
-    reviews = (await get_Project_reviews(project_id, db))
-    stmt = select(Profile).where(Profile.profile_id == project['owner_id'])
-    owner: Profile = (await db.scalars(stmt)).first().__dict__
+    stmt = select(Project).options(joinedload(
+        Project.tags)).options(joinedload(Project.owner).load_only(Profile.username)).where(Project.project_id == UUID(project_id))
+    project = (await db.scalars(stmt)).first()
 
-    project_info = dict(
-        **project, owner=owner, tags=tags, reviews=reviews)
-    return project_info
+    return project
 
 
 @router.post('/', status_code=201)
-async def create_project(project: CreateProject, user: user_dependency, db: db_dependency):
+async def create_project_api(project: CreateProject, user: user_dependency, db: db_dependency):
     project = Project(**project.model_dump(), owner_id=UUID(user['user_id']))
     db.add(project)
     await commit_db(db)
@@ -105,7 +117,7 @@ async def Update_project_image(image: UploadFile, project_id: str,
     await db.commit()
 
     # Remove the old image if it's not the default image
-    if old_image_path and old_image_path != '/static/images/default.jpg':
+    if old_image_path and old_image_path not in ('./static/images/default.jpg', './static/images/user-default.png'):
         try:
             os.remove(old_image_path)
         except OSError as e:

@@ -1,0 +1,47 @@
+{% extends 'main.html' %} {% block content %}
+
+<!-- Main Section -->
+<main class="formPage my-xl">
+  <div class="content-box">
+    <div class="formWrapper">
+      <a class="backButton" href="{{ url_for('account')}}"
+        ><i class="im im-angle-left"><</i></a
+      >
+      <br />
+
+      <form action="" method="POST" class="form auth__form">
+        <input
+          type="hidden"
+          name="csrftoken"
+          value="{{ request.scope.csrftoken() }}"
+        />
+        {% for field, value in profile.model_dump().items() %}
+        <div class="form__field">
+          <label for="formInput#text"
+            >{{field|replace('_',' ')|capitalize}}
+          </label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="{{field}}"
+            value="{{value|default('', true)}}"
+          />
+          {% if errors and errors[field] %}
+          <ul>
+            <li style="color: red">{{ errors[field] }}</li>
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <input
+          class="btn btn--sub btn--lg my-md"
+          type="submit"
+          value="Submit"
+        />
+      </form>
+    </div>
+  </div>
+</main>
+
+{% endblock content %}

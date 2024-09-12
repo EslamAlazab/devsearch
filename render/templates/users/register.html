@@ -1,0 +1,73 @@
+{% extends 'main.html' %} {% block content %}
+
+<div class="auth">
+  <div class="card">
+    <div class="auth__header text-center">
+      <a href="/">
+        <img src="{{ url_for('static', path='images/icon.svg') }}" alt="icon" />
+      </a>
+      <h3>Register an Account</h3>
+      <p>Create a new developer account</p>
+    </div>
+
+    <form method="POST" action="" class="form auth__form">
+      <input
+        type="hidden"
+        name="csrftoken"
+        value="{{ request.scope.csrftoken() }}"
+      />
+      <div class="form__field">
+        <label for="formInput#text">Username</label>
+        <input type="text" class="input input--text" name="username" />
+        {% if errors and errors['username'] %} {% for error in
+        errors['username'] %}
+        <ul>
+          <li style="color: red">{{error}}</li>
+        </ul>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="form__field">
+        <label for="formInput#text">Email</label>
+        <input type="email" class="input input--text" name="email" />
+        {% if errors and errors['email'] %} {% for error in errors['email'] %}
+        <ul>
+          <li style="color: red">{{error}}</li>
+        </ul>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="form__field">
+        <label for="formInput#text">Password</label>
+        <input type="password" class="input input--text" name="password" />
+        {% if errors and errors['password'] %} {% for error in
+        errors['password'] %}
+        <ul>
+          <li style="color: red">{{error}}</li>
+        </ul>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="form__field">
+        <label for="formInput#text">Password again</label>
+        <input type="password" class="input input--text" name="password_2" />
+        {% if errors and errors['password_2'] %} {% for error in
+        errors['password_2'] %}
+        <ul>
+          <li style="color: red">{{error}}</li>
+        </ul>
+        {% endfor %} {% endif %}
+      </div>
+
+      <div class="auth__actions">
+        <input class="btn btn--sub btn--lg" type="submit" value="Sign In" />
+      </div>
+    </form>
+    <div class="auth__alternative">
+      <p>Already have an Account?</p>
+      <a href="{{ url_for('login') }}">Log In</a>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}

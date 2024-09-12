@@ -1,0 +1,147 @@
+{% extends 'main.html' %} {% block content %}
+
+<!-- Main Section -->
+<main class="formPage my-xl">
+  <div class="content-box">
+    <div class="formWrapper">
+      <a class="backButton" href="{{ url_for('account') }}"
+        ><i class="im im-angle-left"><</i></a
+      >
+      <br />
+
+      <form class="form" method="POST" enctype="multipart/form-data">
+        <input
+          type="hidden"
+          name="csrftoken"
+          value="{{ request.scope.csrftoken() }}"
+        />
+        <div class="form__field">
+          <label for="formInput#text">Title</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="title"
+            placeholder="Project Title..."
+            required="true"
+            {%
+            if
+            project
+            %}
+            value="{{project.title}}"
+            {%
+            endif
+            %}
+          />
+          {% if errors and errors['title'] %}
+          <ul>
+            <li style="color: red">{{errors['title']}}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Description</label>
+          <textarea
+            class="input input--text"
+            id="formInput#text"
+            name="description"
+            placeholder="Project description..."
+          >
+{% if project and project.description %}{{ project.description }}{% endif %}
+</textarea
+          >
+          {% if errors and errors['description'] %}
+          <ul>
+            <li style="color: red">{{errors['description']}}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Project Image</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="file"
+            name="featured_image"
+          />
+          {% if errors and errors['featured_image'] %}
+          <ul>
+            <li style="color: red">{{errors['featured_image']}}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Demo Link</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="demo_link"
+            {%
+            if
+            project
+            %}
+            value="{{''|default(project.demo_link,'')}}"
+            {%
+            endif
+            %}
+          />
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Source Code Link</label>
+          <input
+            class="input input--text"
+            id="formInput#text"
+            type="text"
+            name="source_code"
+            {%
+            if
+            project
+            %}
+            value="{{''|default(project.source_code,'')}}"
+            {%
+            endif
+            %}
+          />
+          {% if errors and errors['source_code'] %}
+          <ul>
+            <li style="color: red">{{errors['source_code']}}</li>
+          </ul>
+          {% endif %}
+        </div>
+
+        <div class="form__field">
+          {% if project %} {% for tag in project.tags %}
+          <div class="project-tag tag tag--pill tag--main">
+            {{tag.name}}
+            <a
+              href="{{ url_for('delete-tag', project_id=project.project_id, tag_id=tag.tag_id) }}"
+              >&#215;</a
+            >
+          </div>
+          {% endfor %} {% endif %}
+        </div>
+
+        <div class="form__field">
+          <label for="formInput#text">Tags</label>
+          <textarea
+            class="input"
+            name="newtags"
+            placeholder="Add tags here..."
+          ></textarea>
+        </div>
+        <input
+          class="btn btn--sub btn--lg my-md"
+          type="submit"
+          value="Submit"
+        />
+      </form>
+    </div>
+  </div>
+</main>
+
+{% endblock %}

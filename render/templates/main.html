@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
+    <!-- Mumble UI -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='styles/app.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', path='uikit/styles/uikit.css')}}"
+    />
+    <!-- Dev Search UI -->
+
+    <title>DevSearch - Connect with Developers!</title>
+  </head>
+  <body>
+    {% include 'navbar.html' %} {% if msg %}
+    <div class="alert">
+      <div class="alert  alert--{{msg.tag}}">
+        <p class="alert__message">{{msg.msg}}</p>
+        <button class="alert__close">x</button>
+      </div>
+    </div>
+
+    {% endif %} {% block content %} {% endblock content %} {% include
+    'pagination.html' %}
+  </body>
+  <script src="{{ url_for('static', path='uikit/app.js')}}"></script>
+</html>

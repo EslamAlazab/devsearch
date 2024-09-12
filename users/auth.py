@@ -57,4 +57,4 @@ def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         )
 
 
-user_dependency = Annotated[Profile, Depends(get_current_user)]
+user_dependency = Annotated[dict, Depends(get_current_user)]

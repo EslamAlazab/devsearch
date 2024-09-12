@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator, EmailStr
+from pydantic import BaseModel, Field, field_validator, EmailStr, ConfigDict
 import datetime
 from uuid import UUID
 
@@ -10,6 +10,8 @@ class CreateProfile(BaseModel):
 
 
 class UpdateProfile(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     first_name: str | None = Field(max_length=50, default=None)
     last_name: str | None = Field(max_length=50, default=None)
     location: str | None = Field(max_length=200, default=None)
@@ -51,11 +53,11 @@ class SkillSchema(BaseModel):
 
 
 class MessageFromUser(BaseModel):
-    subject: str
+    subject: str = Field(max_length=200)
     body: str
-    recipient: UUID
+    recipient: str
 
 
 class MessageFromNonUser(MessageFromUser):
     name: str = Field(max_length=200)
-    email: EmailStr
+    email: EmailStr = Field(max_length=200)
