@@ -1,17 +1,17 @@
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from models import Profile
+from base.models import Profile
 from sqlalchemy import select, or_
 from jose import jwt, JWTError
 import datetime
-from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_TIMEDELTA, REFRESH_TOKEN_EXPIRE_TIMEDELTA
+from base.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_TIMEDELTA, REFRESH_TOKEN_EXPIRE_TIMEDELTA
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl='users-api/token')
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl='/api/users-api/token')
 
 
 async def authenticate_user(username_or_email: str, password: str, db: AsyncSession):

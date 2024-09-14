@@ -1,10 +1,8 @@
 from uuid import UUID
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from database import db_dependency, commit_db
-from models import Skill
-from config import logger
+from base.database import db_dependency, commit_db
+from base.models import Skill
 from .auth import user_dependency
 from .schemas import SkillSchema
 from .users import get_user

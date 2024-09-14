@@ -1,20 +1,13 @@
 import os
 from math import ceil
-from uuid import UUID
-from sqlalchemy import func, select, insert
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Request, status, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
-from pydantic import ValidationError
-from models import Profile, Project, Skill, Tag, project_tag
-from users.auth import create_access_token
-from database import get_db
-from projects.projects import get_user_projects
-from users.users import get_user
-from projects.schemas import CreateProject
-from config import logger, templates
-from users.utils import save_and_compress_image
-from render.schemas import ProjectSchema
+import aiosmtplib
+from email.message import EmailMessage
+
+from fastapi import Request, HTTPException
+from sqlalchemy import func, select
+
+from base.config import (logger, templates, SMTP_HOST, SMTP_USER,
+                         SMTP_PASSWORD, SMTP_PORT, FROM_EMAIL)
 
 
 class Paginator:
@@ -91,84 +84,6 @@ async def count_obj(obj, db):
     return await db.scalar(stmt)
 
 
-class Alert:
-    def __init__(self, msg: str, *, tag: str) -> None:
-        self.msg = msg
-        self.tag = tag
-
-
-alerts: dict[str:Alert] = {}
-
-
-def get_login_response(request: Request, user: Profile):
-    token = create_access_token(
-        username=user.username, user_id=str(user.profile_id))
-    if request.query_params.get('next', False):
-        redirect_url = request.query_params['next']
-    else:
-        redirect_url = request.url_for('profiles')
-
-    response = RedirectResponse(
-        url=redirect_url, status_code=status.HTTP_302_FOUND)
-    # set the access token in Authorization header
-    response.set_cookie(key="access_token", value=token,
-                        httponly=True, secure=True)
-    return response
-
-
-async def _user_profile(profile_id: str, page: int, size: int, db: AsyncSession):
-    # Trying to make all the queries called concurrently
-    # db1 = await get_db().__anext__()
-    # db2 = await get_db().__anext__()
-    # db3 = await get_db().__anext__()
-    # user_task = get_user(profile_id, db=db1)
-    # projects_task = get_user_projects(
-    #     user_id=profile_id, db=db2, page=page, size=size)
-    # count_task = count_obj(Project.project_id, db=db3)
-
-    # user, user_projects, total_projects = await gather(user_task, projects_task, count_task)
-
-    user = await get_user(profile_id, db)
-    user_projects = await get_user_projects(profile_id, db, page, size)
-    total_projects = await count_obj(Project.project_id, db)
-
-    projects_paginator = Paginator(
-        page=page, size=size, total=total_projects)
-    context = {'profile': user, 'projects': user_projects,
-               'paginator': projects_paginator}
-    return context
-
-
-async def get_skill(skill_id: str, profile_id: str, db: AsyncSession) -> Skill:
-    stmt = select(Skill).where(Skill.skill_id == UUID(skill_id)).where(
-        Skill.owner_id == UUID(profile_id))
-    return (await db.scalars(stmt)).first()
-
-
-def _unread_count(messages): return sum(
-    1 for message in messages if not message.is_read)
-
-
-async def assign_tag(tag_name: str, project: Project, db: AsyncSession):
-    # Check if the tag already exists
-    tag_exist = (await db.scalars(select(Tag).where(Tag.name == tag_name))).first()
-
-    if not tag_exist:
-        tag = Tag(name=tag_name)
-        # Associate the tag with the project
-        tag.projects.append(project)
-        db.add(tag)
-    else:
-        tag = tag_exist
-        # Associate the existing tag with the project
-        stmt = insert(project_tag).values(
-            project_id=project.project_id, tag_id=tag.tag_id)
-        await db.execute(stmt)
-
-    # Commit the transaction
-    await db.commit()
-
-
 def remove_old_image(old_image_path: str):
     # Remove the old image if it's not the default image
     if old_image_path and old_image_path not in ('./static/images/default.jpg', './static/images/user-default.png'):
@@ -178,56 +93,31 @@ def remove_old_image(old_image_path: str):
             logger.error(f"Error removing old image: {e}")
 
 
-async def handle_project_data(request: Request):
-    """
-    Handles form data submitted for creating or updating a project,
-    including validation and optional image uploads.
+async def send_reset_email(request: Request, user_email, token):
+    # Render the email template
+    template = templates.get_template('password/password_reset_email.html').render({
+        'request': request,
+        'token': token
+    })
 
-    Parameters:
-    -----------
-    request : Request
-        The incoming HTTP request containing form data.
+    # Prepare the email message
+    message = EmailMessage()
+    message["From"] = FROM_EMAIL
+    message["To"] = user_email
+    message["Subject"] = 'DevSearch Password Reset'
+    message.add_alternative(template, subtype='html')
 
-    Returns:
-    --------
-    dict:
-        A dictionary containing the validated project content and the processed image path.
-    TemplateResponse:
-        If form validation or image processing fails, it returns a TemplateResponse with errors ready to be sent.
-
-    Behavior:
-    ---------
-    - Validates the form data using the ProjectSchema model.
-    - Processes and compresses the uploaded image if provided.
-    - Returns validation errors and stops execution if validation fails.
-    """
-
-    # Extract the form data from the request
-    form = await request.form()
-    form_data = {key: value for key, value in form.items() if value}
-
-    # Validate the form data using ProjectSchema
+    # Send the email via aiosmtplib
     try:
-        project_content = ProjectSchema(**form_data)
-    except ValidationError as ex:
-        # Catch validation errors, prepare error messages, and return them to the form template
-        errors = {item['loc'][0]: item['msg'] for item in ex.errors()}
-        context = {'errors': errors}
-        return templates.TemplateResponse(request, 'projects/project-form.html', context)
-
-    # Handle image upload if a featured image is present in the form data
-    image_path = None
-    if 'featured_image' in form:  # Ensure 'featured_image' is in the form
-        project_image: UploadFile = form['featured_image']
-        if project_image.filename:  # Check if an image file is provided
-            try:
-                # Process and compress the uploaded image
-                image_path = await save_and_compress_image(project_image)
-            except HTTPException as ex:
-                # Catch exceptions during image handling and return errors
-                errors = {'featured_image': ex.detail}
-                context = {'errors': errors, 'project': project_content}
-                return templates.TemplateResponse(request, 'projects/project-form.html', context)
-
-    # Return the validated project content and the processed image path
-    return {'project_content': project_content, 'image_path': image_path}
+        await aiosmtplib.send(
+            message,
+            hostname=SMTP_HOST,
+            port=SMTP_PORT,
+            username=SMTP_USER,
+            password=SMTP_PASSWORD,
+            use_tls=True,
+        )
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        raise HTTPException(
+            status_code=500, detail="Error sending verification email")

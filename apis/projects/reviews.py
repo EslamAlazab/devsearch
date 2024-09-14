@@ -1,12 +1,11 @@
 from uuid import UUID
 from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
-from database import db_dependency, commit_db
-from models import Review, Profile
-from users.auth import user_dependency
+from base.database import db_dependency, commit_db
+from base.models import Review, Profile
+from apis.users.auth import user_dependency
 from .schemas import ReviewSchema
 from .utils import update_votes
 

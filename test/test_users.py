@@ -1,5 +1,5 @@
 from .utils import *
-from database import get_db
+from base.database import get_db
 
 
 app.dependency_overrides[get_db] = override_get_db

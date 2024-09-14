@@ -21,12 +21,11 @@
     <title>DevSearch - Connect with Developers!</title>
   </head>
   <body>
-    {% include 'navbar.html' %} {% if msg %}
-    <div class="alert">
-      <div class="alert  alert--{{msg.tag}}">
-        <p class="alert__message">{{msg.msg}}</p>
-        <button class="alert__close">x</button>
-      </div>
+    {% include 'navbar.html' %} {% if alert %}
+
+    <div class="alert  alert--{{alert.tag}}">
+      <p class="alert__message">{{alert.msg}}</p>
+      <button class="alert__close">x</button>
     </div>
 
     {% endif %} {% block content %} {% endblock content %} {% include

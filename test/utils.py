@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from models import Base, User
+from base.models import Base, User
 from sqlalchemy.pool import StaticPool
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession

@@ -4,8 +4,8 @@ from starlette.authentication import (
     AuthenticationBackend, AuthenticationError, SimpleUser, AuthCredentials
 )
 from starlette.middleware.base import BaseHTTPMiddleware
-from users.auth import get_current_user
-from database import SessionLocal
+from apis.users.auth import get_current_user
+from base.database import SessionLocal
 
 
 class CustomUser(SimpleUser):

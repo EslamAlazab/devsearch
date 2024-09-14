@@ -1,10 +1,9 @@
 from uuid import UUID
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select, delete, insert
-from database import db_dependency, commit_db
-from models import Tag, Project, project_tag
-from users.auth import user_dependency
-from .utils import _get_project
+from base.database import db_dependency, commit_db
+from base.models import Tag, Project, project_tag
+from apis.users.auth import user_dependency
 
 
 router = APIRouter(prefix='/projects/tags', tags=['tags'])

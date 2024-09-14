@@ -1,8 +1,8 @@
 from uuid import UUID
 from fastapi import APIRouter, status, HTTPException
 from sqlalchemy import select, or_, desc
-from database import db_dependency, commit_db
-from models import Message
+from base.database import db_dependency, commit_db
+from base.models import Message
 from .auth import user_dependency
 from .users import get_user
 from .schemas import MessageFromUser, MessageFromNonUser

@@ -3,14 +3,12 @@ import os
 from typing import Annotated
 from fastapi import APIRouter, UploadFile, HTTPException, Query
 from sqlalchemy import select, or_
-from database import db_dependency, commit_db
-from models import Project, Tag, Profile, Review
-from config import logger
-from users.auth import user_dependency
-from users.utils import save_and_compress_image
+from base.database import db_dependency, commit_db
+from base.models import Project, Tag, Profile
+from base.config import logger
+from apis.users.auth import user_dependency
+from apis.users.utils import save_and_compress_image
 from .schemas import CreateProject, UpdateProject
-from .reviews import get_Project_reviews
-from .tags import get_project_tags
 from .utils import _get_project
 from sqlalchemy.orm import joinedload
 

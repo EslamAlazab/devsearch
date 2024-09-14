@@ -20,7 +20,6 @@
         <li class="header__menuItem">
           <a href="{{ url_for('projects') }}">Projects</a>
         </li>
-        <!-- <li class="header__menuItem"><a href="">My Account</a></li> -->
         {% if request.user.is_authenticated %}
         <li class="header__menuItem">
           <a href="{{ url_for('account') }}">My Account</a>
@@ -46,5 +45,38 @@
       </ul>
     </nav>
   </div>
-  <br />
+  <!-- Email Verification Prompt -->
+  {% if profile and not profile.is_verified %}
+  <div style="flex: 1; text-align: right; vertical-align: middle">
+    <p
+      style="
+        color: #ff6b6b;
+        font-weight: bold;
+        display: inline-block;
+        margin-right: 1rem;
+        vertical-align: middle;
+      "
+    >
+      Please verify your email!
+    </p>
+    <form
+      method="get"
+      action="{{ url_for('send-email') }}"
+      style="display: inline-block; vertical-align: middle"
+    >
+      <input
+        class="btn btn--sub btn--lg"
+        type="submit"
+        value="Send Verification Email"
+        style="
+          background-color: #007bff;
+          color: #fff;
+          padding: 0.5rem 1rem;
+          border: none;
+          cursor: pointer;
+        "
+      />
+    </form>
+  </div>
+  {% endif %}
 </header>

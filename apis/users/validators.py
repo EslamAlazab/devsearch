@@ -1,6 +1,6 @@
 from password_validator import PasswordValidator
 from pydantic import BaseModel, EmailStr, ValidationError
-from models import Profile
+from base.models import Profile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 

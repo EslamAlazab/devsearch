@@ -2,8 +2,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy import text
 from fastapi import Depends, HTTPException
 from typing import Annotated
-from models import Base
-from config import logger
+from base.models import Base
+from base.config import logger, SETUP_DONE
 
 
 engine = create_async_engine('sqlite+aiosqlite:///devs.db')
@@ -36,17 +36,14 @@ async def create_db_tables():
             END;
         """))
 
-setup_done = True
-
 
 async def initialize_once():
-    global setup_done
-    if not setup_done:
+    if not SETUP_DONE:
         await create_db_tables()
 
 
 async def get_db():
-    # await initialize_once()
+    await initialize_once()
 
     db = SessionLocal()
     try:

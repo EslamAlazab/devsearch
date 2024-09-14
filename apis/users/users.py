@@ -1,32 +1,21 @@
 import os
 from typing import Annotated
-from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, Query
+from fastapi import APIRouter, status, HTTPException, Depends, UploadFile, Query, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import HTMLResponse
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from database import db_dependency, commit_db
-from models import Profile, Skill
-from .schemas import CreateProfile, Token, UpdateProfile, SendProfile
+from base.database import db_dependency, commit_db
+from base.models import Profile, Skill
+from .schemas import CreateProfile, Token, UpdateProfile
 from .validators import user_validation
 from .auth import bcrypt_context, authenticate_user, create_access_token, create_refresh_token, get_current_user, user_dependency
 from uuid import UUID
-from config import logger
-from .utils import save_and_compress_image
+from base.config import logger, templates
+from .utils import save_and_compress_image, email_verify
 
 
 router = APIRouter(prefix='/users-api', tags=['users-api'])
-
-
-# async def get_all_skills(profile_id: str, db):
-# stmt = select(Skill.skill_id, Skill.name, Skill.description).where(
-#     Skill.owner_id == UUID(profile_id))
-# result = (await db.execute(stmt)).all()
-# skills = []
-# for row in result:
-#     skills.append(
-#         {'skill_id': row[0], "name": row[1], 'description': row[2]})
-
-# return skills
 
 
 @router.get('/')
@@ -67,10 +56,10 @@ async def search_users(db: db_dependency, username: str | None = None,
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
 async def create_user(user: CreateProfile, db: db_dependency):
-    # errors = await user_validation(username=profile.username, email=profile.email, password=profile.password, db=db)
-    # if errors:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
+    errors = await user_validation(username=user.username, email=user.email, password=user.password, db=db)
+    if errors:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=errors)
 
     new_user = Profile(**user.model_dump())
     new_user.password = bcrypt_context.hash(new_user.password)
@@ -179,3 +168,26 @@ async def delete_user(user: user_dependency, db: db_dependency):
 
     await db.delete(user)
     await commit_db(db)
+
+
+@router.post('/verify-email')
+async def send_email_verification(user: user_dependency, request: Request,
+                                  db: db_dependency, background_tasks=BackgroundTasks()):
+    background_tasks.add_task(
+        email_verify, user['user_id'], user['username'], request, db)
+    # await email_verify(user['user_id'], user['username'], request, db)
+    return {"message": "Email has been sent"}
+
+
+@router.get("/verify-email/{token}", response_class=HTMLResponse, name='verify')
+async def email_verification(token: str, request: Request, db: db_dependency):
+    user = get_current_user(token)
+    if not user:
+        raise HTTPException(
+            status_code=401, detail='Could not authenticate the user.')
+    stmt = select(Profile).where(
+        Profile.profile_id == UUID(user.get('user_id')))
+    user = (await db.scalars(stmt)).first()
+    user.is_verified = True
+    await commit_db(db)
+    return templates.TemplateResponse(request, 'verified.html', {'username': user.username})

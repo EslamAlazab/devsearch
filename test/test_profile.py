@@ -1,5 +1,5 @@
 from .utils import *
-from database import get_db
+from base.database import get_db
 from users.auth import get_current_user
 import tempfile
 
