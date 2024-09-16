@@ -8,6 +8,7 @@ from starlette.middleware.authentication import AuthenticationMiddleware
 from apis.api import app as api
 from render.routes import project_routes, users_routes
 from base.middleware import BasicAuthBackend, DBSessionMiddleware
+from base.database import SessionLocal, lifespan
 
 
 middleware = [
@@ -22,7 +23,7 @@ routes = [
     Mount('', routes=users_routes, middleware=middleware),
 ]
 
-s_app = Starlette(debug=True, routes=routes)
+s_app = Starlette(debug=True, routes=routes, lifespan=lifespan)
 
 
 def skip_api_paths(scope):

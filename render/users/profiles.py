@@ -57,7 +57,7 @@ async def profiles(request: Request):
     alert_data = request.cookies.get('alert_data', None)
     if alert_data:
         alert = Alert.model_validate_json(alert_data)
-        context.update('alert', alert)
+        context.update({'alert': alert})
     return templates.TemplateResponse(request, 'users/profiles.html', context)
 
 

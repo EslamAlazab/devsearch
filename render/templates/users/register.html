@@ -11,11 +11,12 @@
     </div>
 
     <form method="POST" action="" class="form auth__form">
+      {% if request.scope.csrftoken %}
       <input
         type="hidden"
         name="csrftoken"
         value="{{ request.scope.csrftoken() }}"
-      />
+      />{% endif %}
       <div class="form__field">
         <label for="formInput#text">Username</label>
         <input type="text" class="input input--text" name="username" />
@@ -65,7 +66,7 @@
     </form>
     <div class="auth__alternative">
       <p>Already have an Account?</p>
-      <a href="{{ url_for('login') }}">Log In</a>
+      <a href="{{ url_for('login-page') }}">Log In</a>
     </div>
   </div>
 </div>

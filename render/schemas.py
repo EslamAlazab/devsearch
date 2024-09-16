@@ -3,6 +3,19 @@ from apis.projects.schemas import CreateProject
 from apis.users.validators import password_validator
 
 
+class CreateUser(BaseModel):
+    username: str
+    email: str
+    password: str
+    password_2: str
+
+    @field_validator('username', 'email', mode='before')
+    def empty_string_to_none(cls, v):
+        if v == '':
+            return None
+        return v
+
+
 class MessageSchema(BaseModel):
     name: str = Field(max_length=200)
     email: EmailStr = Field(max_length=200)

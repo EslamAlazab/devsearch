@@ -14,7 +14,7 @@ from apis.users.auth import authenticate_user, bcrypt_context, create_access_tok
 from apis.users.users import get_user
 from apis.users.validators import user_validation
 from apis.users.utils import email_verify
-from render.schemas import Alert, ChangePassword
+from render.schemas import Alert, ChangePassword, CreateUser
 from render.utils import send_reset_email
 
 
@@ -165,18 +165,20 @@ async def register(request: Request):
         db = request.state.db
         form = await request.form()
         try:
-            errors: dict[str, list] = await user_validation(**form, db=db)
-        except:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail='Something Went Wrong')
+            form_data = CreateUser(**form)
+            errors: dict[str, list] = await user_validation(**form_data.model_dump(), db=db)
+        except ValidationError as ex:
+            # Catch validation errors, prepare error messages, and return them to the form template
+            errors = {item['loc'][0]: [item['msg']] for item in ex.errors()}
+
         if errors:
             return templates.TemplateResponse(request, 'users/register.html', {'errors': errors})
 
-        form_data = dict(form)
-        form_data.pop('password_2')
-        form_data['password'] = bcrypt_context.hash(form['password'])
+        delattr(form_data, 'password_2')
 
-        new_user = Profile(**form_data)
+        form_data.password = bcrypt_context.hash(form_data.password)
+
+        new_user = Profile(**form_data.model_dump())
         db.add(new_user)
         await commit_db(db=db)
 

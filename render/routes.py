@@ -7,11 +7,11 @@ from render.projects import projects
 
 
 users_routes = [
-    Route('/login/', endpoint=users.login,
+    Route('/login', endpoint=users.login,
           name='login-page', methods=['GET', 'POST'],),
-    Route('/logout/', endpoint=users.logout,
+    Route('/logout', endpoint=users.logout,
           name='logout'),
-    Route('/register/', endpoint=users.register,
+    Route('/register', endpoint=users.register,
           name='register', methods=['GET', 'POST']),
     Route('/send-email-verification',
           endpoint=users.send_email_verification, name='send-email'),

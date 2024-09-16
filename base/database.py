@@ -1,3 +1,4 @@
+import contextlib
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import text
 from fastapi import Depends, HTTPException
@@ -37,14 +38,13 @@ async def create_db_tables():
         """))
 
 
-async def initialize_once():
-    if not SETUP_DONE:
-        await create_db_tables()
+@contextlib.asynccontextmanager
+async def lifespan(app):
+    await create_db_tables()  # Initialize database when app starts
+    yield
 
 
 async def get_db():
-    await initialize_once()
-
     db = SessionLocal()
     try:
         yield db
