@@ -84,7 +84,7 @@
             if
             project
             %}
-            value="{{''|default(project.demo_link,'')}}"
+            value="{{project.demo_link|default('', true)}}"
             {%
             endif
             %}
@@ -102,7 +102,7 @@
             if
             project
             %}
-            value="{{''|default(project.source_code,'')}}"
+            value="{{project.source_code|default('', true)}}"
             {%
             endif
             %}
