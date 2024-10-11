@@ -86,9 +86,9 @@ async def count_obj(obj, db):
 
 def remove_old_image(old_image_path: str):
     # Remove the old image if it's not the default image
-    if old_image_path and old_image_path not in ('./static/images/default.jpg', './static/images/user-default.png'):
+    if old_image_path and old_image_path not in ('images/default.jpg', 'images/user-default.png'):
         try:
-            os.remove(old_image_path)
+            os.remove(f'static/{old_image_path}')
         except OSError as e:
             logger.error(f"Error removing old image: {e}")
 

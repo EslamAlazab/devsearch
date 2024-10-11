@@ -79,7 +79,7 @@ async def _user_profile(profile_id: str, page: int, size: int, db: AsyncSession)
     """
     user = await get_user(profile_id, db)
     user_projects = await get_user_projects(profile_id, db, page, size)
-    total_projects = await count_obj(Project.project_id, db)
+    total_projects = len(user_projects)
 
     projects_paginator = Paginator(
         page=page, size=size, total=total_projects)

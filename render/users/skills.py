@@ -38,7 +38,8 @@ async def create_skill(request: Request):
     if request.method == 'POST':
         db = request.state.db
         form = await request.form()
-        skill = Skill(**form, owner_id=UUID(request.user.profile_id))
+        skill = Skill(name=form.get('name'), description=form.get(
+            'description'), owner_id=request.user.profile_id)
         db.add(skill)
         await db.commit()
 

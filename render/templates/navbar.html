@@ -46,7 +46,7 @@
     </nav>
   </div>
   <!-- Email Verification Prompt -->
-  {% if profile and not profile.is_verified %}
+  {% if request.user.is_authenticated and profile and not profile.is_verified %}
   <div style="flex: 1; text-align: right; vertical-align: middle">
     <p
       style="

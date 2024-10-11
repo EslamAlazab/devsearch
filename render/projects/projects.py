@@ -81,7 +81,7 @@ async def project(request: Request):
         # Handle review submission if the user has not already reviewed the project
         if not already_reviewed and request.method == "POST":
             form = await request.form()
-            review = Review(**form, project_id=UUID(project_id),
+            review = Review(body=form.get('body', None), value=form.get('value'), project_id=UUID(project_id),
                             owner_id=UUID(request.user.profile_id))
             db.add(review)
             await commit_db(db)
@@ -271,6 +271,7 @@ async def update_project(request: Request):
     return templates.TemplateResponse(request, 'projects/project-form.html', {'project': project})
 
 
+@requires('authenticated', redirect='login-page')
 async def delete_project(request: Request):
     """
     Handles the deletion of a project.

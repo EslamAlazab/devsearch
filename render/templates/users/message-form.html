@@ -67,13 +67,12 @@
 
         <div class="form__field">
           <label for="formInput#text">Body</label>
-          <input
+          <textarea
             class="input input--text"
             id="formInput#text"
-            type="text"
             name="body"
             required="true"
-          />
+          ></textarea>
           {% if errors and errors[body] %}
           <ul>
             <li style="color: red">{{ errors[body] }}</li>

@@ -2,7 +2,7 @@ from uuid import UUID
 import os
 from typing import Annotated
 from fastapi import APIRouter, UploadFile, HTTPException, Query
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, desc
 from base.database import db_dependency, commit_db
 from base.models import Project, Tag, Profile
 from base.config import logger
@@ -21,7 +21,7 @@ async def search_projects(db: db_dependency, project_title_or_tag: str | None = 
                           page: Annotated[int, Query(ge=1)] = 1, size: Annotated[int, Query(ge=1)] = 9):
     start = (page - 1) * size
     stmt = select(Project).distinct().offset(
-        start).limit(size).order_by(Project.created).options(
+        start).limit(size).order_by(desc(Project.created)).options(
         joinedload(Project.tags),
         joinedload(Project.owner).load_only(Profile.username))
 
@@ -115,7 +115,7 @@ async def Update_project_image(image: UploadFile, project_id: str,
     await db.commit()
 
     # Remove the old image if it's not the default image
-    if old_image_path and old_image_path not in ('./static/images/default.jpg', './static/images/user-default.png'):
+    if old_image_path and old_image_path not in ('images/default.jpg', 'images/user-default.png'):
         try:
             os.remove(old_image_path)
         except OSError as e:

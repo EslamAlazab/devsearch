@@ -34,17 +34,9 @@
         </div>
         <div class="form__field">
           <label for="formInput#text">Description</label>
-          <input
-            type="text"
-            class="input input--text"
-            name="description"
-            {%if
-            skill%}
-            value="{{skill.description|default('')}}"
-            {%
-            endif
-            %}
-          />
+          <textarea type="text" class="input input--text" name="description">
+            {% if skill and skill.description %}{{ skill.description }}{% endif %}</textarea
+          >
         </div>
 
         <input

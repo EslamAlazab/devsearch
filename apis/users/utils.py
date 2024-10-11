@@ -33,8 +33,8 @@ async def save_and_compress_image(image: UploadFile) -> str:
     current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
     # Create a directory named after the current date
-    date_dir = f'{SAVE_DIR}/{current_date}'
-    os.makedirs(date_dir, exist_ok=True)
+    date_dir = f'./static/{SAVE_DIR}/{current_date}'
+    os.makedirs(f"{date_dir}", exist_ok=True)
 
     # Generate a unique filename using UUID
     extension = image.filename.rsplit('.', 1)[1].lower()
@@ -55,7 +55,7 @@ async def save_and_compress_image(image: UploadFile) -> str:
     img = img.convert("RGB")  # Ensure compatibility with all formats
     img.save(file_path, format='JPEG', optimize=True, quality=85)
 
-    return file_path
+    return file_path.replace('./static/', '')
 
 
 async def email_verify(user_id: str, username: str, request: Request, db: AsyncSession):

@@ -24,7 +24,7 @@ class Profile(Base):
     short_intro: Mapped[str] = mapped_column(String(200), nullable=True)
     bio: Mapped[str] = mapped_column(nullable=True)
     profile_image: Mapped[str] = mapped_column(nullable=True,
-                                               default='./static/images/user-default.png')
+                                               default='images/user-default.png')
     github: Mapped[str] = mapped_column(String(200), nullable=True)
     x: Mapped[str] = mapped_column(String(200), nullable=True)
     linkedin: Mapped[str] = mapped_column(String(200), nullable=True)
@@ -89,7 +89,7 @@ class Project(Base):
     title: Mapped[str] = mapped_column(index=True)
     description: Mapped[str] = mapped_column(nullable=True)
     featured_image: Mapped[str] = mapped_column(nullable=True,
-                                                default='./static/images/default.jpg')
+                                                default='images/default.jpg')
     demo_link: Mapped[str] = mapped_column(nullable=True)
     source_code: Mapped[str] = mapped_column(nullable=True)
     vote_total: Mapped[int] = mapped_column(default=0)

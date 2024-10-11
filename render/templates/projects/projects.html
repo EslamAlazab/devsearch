@@ -40,7 +40,7 @@
             >
               <img
                 class="project__thumbnail"
-                src="/{{project.featured_image}}"
+                src="{{url_for('static' , path =project.featured_image) }}"
                 alt="project thumbnail"
               />
               <div class="card__body">

@@ -7,16 +7,23 @@
       <div class="column column--1of3">
         <div class="card text-center">
           <div class="card__body dev">
-            <img class="avatar avatar--xl" src="/{{ profile.profile_image }}" />
+            <img
+              class="avatar avatar--xl"
+              src="{{ url_for('static' , path=profile.profile_image) }}"
+            />
             <h2 class="dev__name">{{profile.username}}</h2>
-            <p class="dev__title">{{profile.short_intro}}</p>
-            {% if profile.location %}
-            <p class="dev__location">Based in {{profile.location}}</p>
+            {% if profile.short_intro != none%}
+            <p class="dev__title">{{ profile.short_intro }}</p>
+            {% endif %} {% if profile.location %}
+            <p class="dev__location">Based in {{ profile.location }}</p>
             {% endif %}
             <ul class="dev__social">
               {% if profile.github %}
               <li>
-                <a title="Github" href="/{{profile.github}}" target="_blank"
+                <a
+                  title="Github"
+                  href="{{profile.social_github}}"
+                  target="_blank"
                   ><img
                     src="{{url_for('static', path='icons/iconmonstr-github-1.svg')}}"
                     alt="github Logo"
@@ -24,24 +31,36 @@
               </li>
               {% endif %} {% if profile.x %}
               <li>
-                <a title="Twitter" href="{{profile.x}}" target="_blank"
-                  ><i class="im im-twitter"></i
-                ></a>
+                <a
+                  title="Twitter"
+                  href="{{profile.social_twitter}}"
+                  target="_blank"
+                  ><img
+                    src="{{url_for('static', path='icons/iconmonstr-twitter-1.svg')}}"
+                    alt="github Logo"
+                /></a>
               </li>
               {% endif %} {% if profile.linkedin %}
               <li>
-                <a title="LinkedIn" href="{{profile.linkedin}}" target="_blank"
-                  ><i class="im im-linkedin"></i
-                ></a>
+                <a
+                  title="LinkedIn"
+                  href="{{profile.social_linkedin}}"
+                  target="_blank"
+                  ><img
+                    src="{{url_for('static', path='icons/iconmonstr-linkedin-3.svg')}}"
+                    alt="github Logo"
+                /></a>
               </li>
               {% endif %} {% if profile.website %}
               <li>
                 <a
                   title="Personal Website"
-                  href="{{profile.website}}"
+                  href="{{profile.social_website}}"
                   target="_blank"
-                  ><i class="im im-globe"></i
-                ></a>
+                  ><img
+                    src="{{url_for('static', path='icons/iconmonstr-globe-3.svg')}}"
+                    alt="github Logo"
+                /></a>
               </li>
               {% endif %}
             </ul>
@@ -57,7 +76,9 @@
       <div class="column column--2of3">
         <div class="devInfo">
           <h3 class="devInfo__title">About Me</h3>
-          <p class="devInfo__about">{{''|default(profile.bio, '')}}</p>
+          {% if profile.bio %}
+          <p class="devInfo__about">{{profile.bio| markdown | safe}}</p>
+          {% endif %}
         </div>
         <div class="devInfo">
           <h3 class="devInfo__title">Skills</h3>
@@ -91,7 +112,7 @@
                 >
                   <img
                     class="project__thumbnail"
-                    src="{{project.featured_image}}"
+                    src="{{url_for('static' , path =project.featured_image) }}"
                     alt="project thumbnail"
                   />
                   <div class="card__body">

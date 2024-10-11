@@ -148,7 +148,7 @@ async def update_profile_image(image: UploadFile, user: user_dependency, db: db_
     await commit_db(db)
 
     # Remove the old image if it's not the default image
-    if old_image_path and old_image_path not in ('/images/default.jpg', '/images/user-default.png'):
+    if old_image_path and old_image_path not in ('images/default.jpg', 'images/user-default.png'):
         try:
             os.remove(old_image_path)
         except OSError as e:

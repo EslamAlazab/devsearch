@@ -3,8 +3,11 @@ import os
 import logging
 from fastapi.templating import Jinja2Templates
 from jinja2.ext import loopcontrols
+import markdown
 
 templates = Jinja2Templates('render/templates', extensions=[loopcontrols])
+
+templates.env.filters['markdown'] = lambda text: markdown.markdown(text)
 
 SECRET_KEY = os.getenv('secret_key', 'testkey')
 ALGORITHM = "HS256"
@@ -13,7 +16,7 @@ REFRESH_TOKEN_EXPIRE_TIMEDELTA = timedelta(minutes=1440)  # 24 hours
 
 SETUP_DONE = os.getenv('setup_done', True)
 
-SAVE_DIR = "./static/images"
+SAVE_DIR = "images"
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB limit
 
