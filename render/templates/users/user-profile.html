@@ -20,10 +20,7 @@
             <ul class="dev__social">
               {% if profile.github %}
               <li>
-                <a
-                  title="Github"
-                  href="{{profile.social_github}}"
-                  target="_blank"
+                <a title="Github" href="//{{profile.github}}" target="_blank"
                   ><img
                     src="{{url_for('static', path='icons/iconmonstr-github-1.svg')}}"
                     alt="github Logo"
@@ -31,10 +28,7 @@
               </li>
               {% endif %} {% if profile.x %}
               <li>
-                <a
-                  title="Twitter"
-                  href="{{profile.social_twitter}}"
-                  target="_blank"
+                <a title="Twitter" href="//{{profile.twitter}}" target="_blank"
                   ><img
                     src="{{url_for('static', path='icons/iconmonstr-twitter-1.svg')}}"
                     alt="github Logo"
@@ -44,7 +38,7 @@
               <li>
                 <a
                   title="LinkedIn"
-                  href="{{profile.social_linkedin}}"
+                  href="//{{profile.linkedin}}"
                   target="_blank"
                   ><img
                     src="{{url_for('static', path='icons/iconmonstr-linkedin-3.svg')}}"
@@ -55,7 +49,7 @@
               <li>
                 <a
                   title="Personal Website"
-                  href="{{profile.social_website}}"
+                  href="//{{profile.website}}"
                   target="_blank"
                   ><img
                     src="{{url_for('static', path='icons/iconmonstr-globe-3.svg')}}"
