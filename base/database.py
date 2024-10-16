@@ -4,7 +4,7 @@ from sqlalchemy import text
 from fastapi import Depends, HTTPException
 from typing import Annotated
 from base.models import Base
-from base.config import logger, SETUP_DONE
+from base.config import logger
 
 
 engine = create_async_engine('sqlite+aiosqlite:///devs.db')
