@@ -9,6 +9,16 @@ templates = Jinja2Templates('render/templates', extensions=[loopcontrols])
 
 templates.env.filters['markdown'] = lambda text: markdown.markdown(text)
 
+
+def ensure_protocol(url: str) -> str:
+    if not url.startswith(('http://', 'https://')):
+        url = f"https://{url}"
+    return url
+
+
+templates.env.filters['ensure_protocol'] = ensure_protocol
+
+
 SECRET_KEY = os.getenv('secret_key')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_TIMEDELTA = timedelta(minutes=300)  # 5 hours
