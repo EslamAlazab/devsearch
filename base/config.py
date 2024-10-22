@@ -19,7 +19,7 @@ def ensure_protocol(url: str) -> str:
 templates.env.filters['ensure_protocol'] = ensure_protocol
 
 
-SECRET_KEY = os.getenv('secret_key')
+SECRET_KEY = os.getenv('secret_key', 'testkey')
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_TIMEDELTA = timedelta(minutes=300)  # 5 hours
 REFRESH_TOKEN_EXPIRE_TIMEDELTA = timedelta(minutes=1440)  # 24 hours
